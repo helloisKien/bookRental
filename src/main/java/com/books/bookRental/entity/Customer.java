@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter @Setter @ToString @AllArgsConstructor @NoArgsConstructor
 public class Customer extends  BaseEntity {
@@ -20,5 +22,9 @@ public class Customer extends  BaseEntity {
 
     @Column(name="mobile_number")
     private String mobileNumber;
+
+    private LocalDateTime createdAt;
+
+    private String createdBy;
 
 }

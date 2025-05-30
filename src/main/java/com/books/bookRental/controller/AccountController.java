@@ -1,6 +1,7 @@
 package com.books.bookRental.controller;
 
 import com.books.bookRental.constants.AccountsConstants;
+import com.books.bookRental.exception.CustomerAlreadyExistsException;
 import com.books.bookRental.service.IAccountsService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,15 +23,27 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import com.books.bookRental.service.impl.AccountsServiceImpl;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping(path="/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 public class AccountController {
 
+    public AccountsServiceImpl accountServiceImpl = new AccountsServiceImpl();
+
     @PostMapping("/create")
-    public ResponseEntity<ResponseDto> createAccount(@Valid @RequestBody CustomerDto customerDto) {
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
+    public ResponseEntity<Object> createAccount(@Valid @RequestBody CustomerDto customerDto) {
+        try {
+            accountServiceImpl.createAccount(customerDto);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
+        }catch (CustomerAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponseDto("/api/create",HttpStatus.BAD_REQUEST,e.getMessage(), LocalDateTime.now()));
+
+        }
     }
 }
