@@ -21,31 +21,40 @@ import java.util.Optional;
 import java.util.Random;
 
 @Service
-@NoArgsConstructor
 @AllArgsConstructor
-public class AccountsServiceImpl  implements IAccountsService {
+public class AccountsServiceImpl implements IAccountsService{
 
-    private AccountsRepository accountsRepository;
-    private CustomerRepository customerRepository;
+    private final CustomerRepository customerRepository;
+    private final AccountsRepository accountsRepository;
 
-    /**
-     * @param customerDto - CustomerDto Object
-     */
     @Override
     public void createAccount(CustomerDto customerDto) {
-        if(customerRepository.existsByMobileNumber(customerDto.getMobileNumber())){
-            throw new CustomerAlreadyExistsException(AccountsConstants.CUSTOMER_ALREADY_EXISTS);
-        } // check if email already exists in database or not
-        CustomerMapper customerMapper = new CustomerMapper();
-        Customer customerFromDto = customerMapper.mapToCustomer(customerDto, new Customer());
-        customerFromDto.setCreatedAt(LocalDateTime.now());
-        customerFromDto.setCreatedBy(customerDto.getName());
-        Customer savedCustomer = customerRepository.save(customerFromDto);
-        Accounts accounts = new Accounts(savedCustomer.getCustomerId(), savedCustomer.getCustomerId(), "Type 1", "Branch 1");
-        accountsRepository.save(accounts);
+        Customer customer = CustomerMapper.mapToCustomer(customerDto, new Customer());
+        Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
+        if (optionalCustomer.isPresent()) {
+            throw new CustomerAlreadyExistsException("Customer already registered with mobile number: " + customerDto.getMobileNumber());
+        }
+        customer.setCreatedAt(LocalDateTime.now());
+        customer.setCreatedBy("anonymous");
 
+        Customer savedCustomer = customerRepository.save(customer);
 
+        Accounts account = createNewAccount(savedCustomer);
+        accountsRepository.save(account);
+    }
 
+    private Accounts createNewAccount(Customer customer) {
+        Accounts account = new Accounts();
+        account.setCustomerId(customer.getCustomerId());
+        account.setAccountNumber(generateRandomAccountNumber());
+        account.setAccountType("SAVINGS");
+        account.setBranchAddress("123 Main Street, New York");
+        account.setCreatedAt(LocalDateTime.now());
+        account.setCreatedBy("anonymous");
+        return account;
+    }
 
+    private long generateRandomAccountNumber() {
+        return 1000000000L + new Random().nextInt(900000000);
     }
 }

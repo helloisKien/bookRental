@@ -29,21 +29,16 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping(path="/api", produces = {MediaType.APPLICATION_JSON_VALUE})
+@AllArgsConstructor
 public class AccountController {
 
-    public AccountsServiceImpl accountServiceImpl = new AccountsServiceImpl();
+    private IAccountsService iAccountsService;
 
     @PostMapping("/create")
-    public ResponseEntity<Object> createAccount(@Valid @RequestBody CustomerDto customerDto) {
-        try {
-            accountServiceImpl.createAccount(customerDto);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
-        }catch (CustomerAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(new ErrorResponseDto("/api/create",HttpStatus.BAD_REQUEST,e.getMessage(), LocalDateTime.now()));
-
-        }
+    public ResponseEntity<ResponseDto> createAccount(@RequestBody CustomerDto customerDto) {
+        iAccountsService.createAccount(customerDto);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
     }
 }
