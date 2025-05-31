@@ -2,7 +2,9 @@ package com.books.bookRental.controller;
 
 import com.books.bookRental.constants.AccountsConstants;
 import com.books.bookRental.exception.CustomerAlreadyExistsException;
+import com.books.bookRental.exception.ResourceNotFoundException;
 import com.books.bookRental.service.IAccountsService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,5 +42,17 @@ public class AccountController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new ResponseDto(AccountsConstants.STATUS_201, AccountsConstants.MESSAGE_201));
+    }
+
+    @GetMapping("/customer")
+    public ResponseEntity<Object> getCustomerFromMobileNumber(@RequestParam String mobileNumber, HttpServletRequest request){
+        try {
+            CustomerDto customerDto = iAccountsService.getCustomerFromMobileNumber(mobileNumber);
+            return ResponseEntity.status(HttpStatus.OK).body(customerDto);
+        } catch(ResourceNotFoundException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponseDto(request.getRequestURI(),HttpStatus.NOT_FOUND,e.getMessage(),LocalDateTime.now()));
+        }
     }
 }

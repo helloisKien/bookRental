@@ -7,6 +7,7 @@ import com.books.bookRental.dto.CustomerDto;
 import com.books.bookRental.entity.Accounts;
 import com.books.bookRental.entity.Customer;
 import com.books.bookRental.exception.CustomerAlreadyExistsException;
+import com.books.bookRental.exception.ResourceNotFoundException;
 import com.books.bookRental.mapper.AccountsMapper;
 import com.books.bookRental.mapper.CustomerMapper;
 import com.books.bookRental.repository.AccountsRepository;
@@ -56,5 +57,25 @@ public class AccountsServiceImpl implements IAccountsService{
 
     private long generateRandomAccountNumber() {
         return 1000000000L + new Random().nextInt(900000000);
+    }
+
+    @Override
+    public CustomerDto getCustomerFromMobileNumber(String mobileNumber){
+
+        Optional<Customer> customerFromMobileNumber = customerRepository.findByMobileNumber(mobileNumber);
+        if(customerFromMobileNumber.isEmpty()){
+            throw new ResourceNotFoundException("Customer","mobileNumber",mobileNumber);
+        }
+        Customer customer = customerFromMobileNumber.get();
+        Optional<Accounts> accountsFromCustomerId = accountsRepository.findAccountsByCustomerId(customer.getCustomerId());
+        if(accountsFromCustomerId.isEmpty()){
+            throw new ResourceNotFoundException("Accounts","customerId",String.valueOf(customer.getCustomerId()));
+        }
+        Accounts accounts = accountsFromCustomerId.get();
+        CustomerDto customerDto = CustomerMapper.mapToCustomerDto(customer,new CustomerDto());
+        AccountsDto accountsDto = AccountsMapper.mapToAccountsDto(accounts,new AccountsDto());
+        customerDto.setAccountsDto(accountsDto);
+        return customerDto;
+
     }
 }
